@@ -1,5 +1,5 @@
-# MPLS Fundamentals - Chapter1
-- [Chapter 1. MPLS 演进过程](#chapter-1-mpls-演进过程)
+# MPLS Fundamentals - Chapter 1
+- [Chapter 1 - MPLS 演进过程](#chapter-1-mpls-演进过程)
   - [MPLS的定义](#mpls的定义)
   - [Pre-MPLS Protocols](#pre-mpls-protocols)
   - [MPLS的优势](#mpls的优势)
