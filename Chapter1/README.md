@@ -1,4 +1,4 @@
-# MPLS Fundamentals
+# MPLS Fundamentals - Chapter1
 - [MPLS Fundamentals](#mpls-fundamentals)
   - [Chapter 1. MPLS 演进过程](#chapter-1-mpls-演进过程)
     - [MPLS的定义](#mpls的定义)
@@ -20,6 +20,7 @@
 <small><i><a href='http://ecotrust-canada.github.io/markdown-toc/'>Table of contents generated with markdown-toc</a></i></small>
 
 ## Chapter 1. MPLS 演进过程
+
 ### MPLS的定义
 <p>
 对于传统的IP转发，网络中路由器根据路由协议建立转发规则，每一台路由器再根据这个规则来转发报文，因为这个规则是基于IP地址的，所以路由器只会根据数据报文中的目标IP来判断如何转发。而在MPLS架构中，所有支持MPLS的设备会在网络收敛完成后，预先建立一套标签转发规则，并在发送报文时将计算好的标签绑定到IP头部的外面，因此这个报文可以在网络中以标签为导向逐跳被发送去往目的地，从而取代传统的IP转发模式。
@@ -86,7 +87,6 @@ Overlay网络至今仍被沿用，但现在客户使用MPLS VPN服务代替了�
 <p>
 综上所述，IP over ATM的所有方案想法都是不错，但实施和维护起来都是非常复杂，正式因为这一点才推动了大家发明了MPLS。另外，在ATM交换机中运行MPLS的前提条件是我们需要让这台交换机变得更加智能，因为这台交换机需要同时运行IP和LDP（label distribution protocol）协议。这里第5章会详细说明MPLS和ATM在软件架构上区别。
 </p>
-
 #### BGP-Free Core:
 
 <p>
