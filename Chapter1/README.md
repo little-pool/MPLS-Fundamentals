@@ -86,6 +86,7 @@ Overlay网络至今仍被沿用，但现在客户使用MPLS VPN服务代替了�
 <p>
 综上所述，IP over ATM的所有方案想法都是不错，但实施和维护起来都是非常复杂，正式因为这一点才推动了大家发明了MPLS。另外，在ATM交换机中运行MPLS的前提条件是我们需要让这台交换机变得更加智能，因为这台交换机需要同时运行IP和LDP（label distribution protocol）协议。这里第5章会详细说明MPLS和ATM在软件架构上区别。
 </p>
+
 #### BGP-Free Core:
 
 <p>
