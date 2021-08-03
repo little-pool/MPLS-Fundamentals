@@ -152,10 +152,6 @@
 
 ![Figure 2-7. An MPLS Network Running iBGP](https://learning.oreilly.com/library/view/mpls-fundamentals/1587051974/1587051974_ch02lev1sec5_image01.gif)
 
-<p>
-  
-</p>
-
 
 
 <p>
@@ -169,10 +165,10 @@
 <p>
   数据包在Ingress LSR上被压入标签，这个标签一定会属于一个LSP，数据包会借助这条LSP穿越MPLS网络。数据包在MPLS网络中传输时栈顶标签每一跳都会被替换。Ingress LSR会在开始时给数据包压入一层或多层标签，传输过程中，Intermediate LSR会把栈顶的入向标签替换成出向标签然后发往下一跳，最后，Egress LSR把栈顶标签剥掉继续转发报文。
 </p>
-
 <p>
-  我们来看一个IPv4-over-MPLS网络最简单的例子，低配版本中，所有LSR都跑IPv4的IGP。Ingress LSR收到报文后看一下目标IP，然后匹配一个标签给压上，然后发出去。下一个LSR收到一个标签包，将入标签替换成出标签然后继续转发。最后Egress LSR弹出标签，把里面的IPv4报文从出接口转发出去。为了能让上述流程正常运行，相邻的LSR必须在标签和IGP前缀的映射上达成共识，然后他们才会知道接收报文的入向标签应该被替换成哪一个出向标签。因此你需要一种机制来告诉LSR在转发报文时应该使用什么标签。标签是本地有效的（意思是仅在邻接的路由器之间有意义），它没有任何全局意义（除了SR Label）。所以为了在邻接LSR间就标签机制达成共识，它俩必须可以聊天，因此标签分发协议就诞生了。
+  我们来看一个IPv4-over-MPLS网络最简单的例子，低配版本中，所有LSR都跑IPv4的IGP。Ingress LSR收到报文后看一下目标IP，然后匹配一个标签给压上，最后发出去。下一个LSR收到一个标签包，将入标签替换成出标签然后继续转发。最后Egress LSR弹出标签，把里面的IPv4报文从出接口转发出去。为了能让上述流程正常运行，相邻的LSR必须在标签和IGP前缀的映射上达成共识，然后他们才会知道接收报文的入向标签应该被替换成哪一个出向标签。因此你需要一种机制来告诉LSR在转发报文时应该使用什么标签。标签是本地有效的（意思是仅在邻接的路由器之间有意义），它没有任何全局意义（除了SR Label）。所以为了在邻接LSR间就标签机制达成共识，它俩必须可以聊天，因此标签分发协议就诞生了。
 </p>
+
 
 <p>
   你可以使用如下两种方式分发标签：
@@ -183,13 +179,87 @@
 
 
 
+**通过已有IP路由协议承载标签**
+
+<p>
+  第一种方式的优势在于我们不需要在LSR上运行额外的协议，但每一种已知IP路由协议都需要做扩展来支持携带标签信息。这项工作并不简单。另外一个很明显的优势就是，标签和IP路由协议的收敛是完全同步的，因为标签信息就在IP路由协议报文中。对于距离矢量路由协议的扩展相对简单，因为每个路由器都只是向外传递自己的路由表，所以它们只需要把标签绑定到每个传递出去的前缀上就好了。
+</p>
+
+<p>
+  然而链路状态型路由协议就不一样了，在同一个区域的每一个路由器都生成并转发固定的链路状态信息。但问题是MPLS的运行需要每个路由器对网络中的每一个IGP Prefix分配标签，即便这个Prefix并不是该路由器本地的产生的。所以链路状态型路由协议需想要实现它，就得另辟蹊径。实际上，为非自身起源前缀分发标签这件事它就不符合链路状态路由协议的运行机理，所以这种环境下我们更倾向于使用单独的协议分发标签。
+</p>
+
+<p>
+  目前没有IGP被扩展来分发标签（当时还没有SR），但当时BGP却可以。在第7章中会讲BGP在MPLS VPN网络中的重要功能就是标签的分发。
+</p>
 
 
 
+**使用单独的标签分发协议**
+
+<p>
+  第二种方式 - 使用单独的协议分发标签 - 优势就是不依赖于IGP。不管网络使用的是啥IGP，不管IGP是否支持标签分发，我们只让IGP分发路由前缀，让单独的协议负责标签分发。缺点就是路由器上药运行一个新的协议。
+</p>
+
+<p>
+  多个路由器厂商最终选择了一个统一的IGP标签分发协议，就是LDP，但LDP并不是唯一可以分发MPLS标签的协议。
+</p>
+
+<p>
+  多个可以分发标签的协议：
+</p>
+
+* Tag Distribution Protocol（TDP）
+* Label Distribution Protocol（LDP）
+* Resource Reservation Protocol（RSVP）
+
+<p>
+  TDP就是早期的LDP，是思科研发的第一个标签分发协议。然而TDP是思科私有的。最后经过IETF的标准化有了LDP。他们二者虽然运行机制很相似，但LDP有更多的功能。后面随着思科在IOS中普遍支持LDP，TDP就被慢慢取代并废弃了。
+</p>
+
+<p>
+  RSVP只用在MPLS TE环境中，第8章会通过介绍TE来了解RSVP的运行机制。LDP会在第4章详细介绍。
+</p>
 
 
 
 ### 标签分发协议 LDP
+
+<p>
+  运行LDP的LSR为它路由表中的每个IGP IP Prefix分配一个本地标签。LSR会把这些本地映射分发给它的LDP邻居，在它的邻居眼里，这些收到的映射则会成为远端映射（remote binding），然后LSR会把自己的本地映射和收到的远端映射存放到一个单独的表中，这个个表叫LIB（label information base）。LSR一般对于一个前缀只会绑定一个本地标签，当然这是在默认设置为label space = per platform情况下的行为。如果情况为per interface，在每个接口上，每个前缀都会绑定一个单独的本地标签。所以对于本地标签，你可以让它在全局唯一绑定一个前缀，或者在一个接口上唯一绑定一个前缀（后者会消耗更多的标签，实施时需要考虑label space和业务场景）。但远程标签就不太一样了，对于每一个前缀它的所有LDP邻接LSR都会给他发remote label。
+</p>
+
+
+
+**Note**
+
+<p>
+  Per-Platform 和 Per-Interface label space模式的区别会在后面介绍。
+</p>
+
+
+
+<p>
+  在多个remote label绑定了一个前缀之后，LSR就要从中选择一个然后用它作为去往这个目标前缀的出标签。路由表决定了去往这个前缀的下一跳路由器，于是LSR就会选择从这个下一跳路由器收到的remote label作为去往目标前缀的出标签。本着这样的竞选原则，LSR很快就可以建立出自己的标签转发信息表（label forwarding information base），里面存储了对于每一个prefix，入标签和优选的出标签的映射。这时，当LSR收到标签报文的时候，它一查LFIB就知道如何做swapping了。下图展示了针对10.0.0.0/8这个前缀LDP标签通告是如何在LSR间传递的。
+</p>
+
+![Figure 2-8. An IPv4-over-MPLS Network Running LDP](https://learning.oreilly.com/api/v2/epubs/urn:orm:book:1587051974/files/1587051974_ch02lev1sec7_image01.gif)
+
+<p>
+  下图描述了去往10.0.0.0/8的数据包在MPLS网络中标签交换过程。你可以对比上图的控制平面来看数据平面。
+</p>
+
+![Figure 2-9. An IPv4-over-MPLS Network Running LDP: Packet Switching](https://learning.oreilly.com/api/v2/epubs/urn:orm:book:1587051974/files/1587051974_ch02lev1sec7_image02.gif)
+
+**Note**
+
+<p>
+  在Cisco IOS中， LDP是不会给BGP IPv4前缀分配标签的。
+</p>
+
+
+
+
 
 ### 标签转发表 LFIB
 
