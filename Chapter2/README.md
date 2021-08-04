@@ -259,13 +259,149 @@
 
 
 
-
-
 ### 标签转发表 LFIB
+
+<p>
+  LFIB用于转发标签报文，里面存放着所有LSP的入标签和出标签信息。入标签是LSR本地生成的，出标签是LSR在LIB中从多个远端收到的标签中选出来，然后安装到LFIB的。出标签的选择标准基于路由表的最优下一跳。
+</p>
+
+<p>
+  以IPv4-over-MPLS为例，LDP标签都是用于绑定IPv4前缀的。然而，LSR的LFIB中并不一定全是LDP分配的标签。在MPLS TE环境中，RSVP也会分配标签，在MPLS VPN环境中，BGP也会分配标签。但不论怎样，LFIB都会用于LSR的标签交换及转发。
+</p>
+
+
 
 ### MPLS 载荷
 
+<p>
+  相比于所有的2层协议报头，MPLS标签中没有网络层协议标识字段，那么LSR是如何知道标签下面的协议是什么的呢？或者说LSR是怎么知道MPLS载荷的？其实大部分的LSR并不需要知道这些，因为根据它们的工作原理，收到一个标签报文，看看顶层标签，查表，swap，转发就好了，大部分的中间LSR或P路由器都是这样工作的。
+</p>
+
+<p>
+  中间LSR只看顶层标签，如果标签栈存在多层标签，即使LSR看了底层标签也没有用，因为除了顶层标签外，所有的底层标签都不是它分配的，它根本看不懂。你就更别说MPLS的payload了，中间LSR的工作就是转发标签报文，只有顶层标签才可以让它正确转发，看多了没用，不该看的别看。
+</p>
+
+<p>
+  只有egress LSR才会pop掉顶层标签，它才需要知道MPLS payload是什么，因为它需要继续转发mpls payload。因此在它对帧进行重新封装的时候，它需要知道在2层头部中的协议标识字段需要填什么。它是怎么知道的呢？很简单，因为当初是它自己把FEC和local label绑定的，所以拿掉标签后它也知道数据包应该从那个FEC继续转发。
+</p>
+
+
+
 ### MPLS 标签空间
+
+#### Per-Interface Label Space
+
+<p>
+  看下图，LSR A针对FEC1会给LSR B通告标签L1，针对FEC2会给LSR C通告标签L2，但之后，LSR A收到带有L1的标签报文时，它得能分辨出来是从谁（或者那个接口收到的）。这个例子中B和C都是和A直连，所有很好分辨。所以实际上这里的标签L1是接口唯一的，这时LSR在转发标签报文时就不能只考虑标签了，要考虑接口+标签。
+</p>
+
+![Figure 2-10. Per-Interface Label Space](https://learning.oreilly.com/api/v2/epubs/urn:orm:book:1587051974/files/1587051974_ch02lev1sec10_image01.gif)
+
+#### Per-Platform Label Space
+
+<p>
+  另外一种情况就是label并非接口唯一，而是LSR全局唯一。这种情况下，A针对FEC1，通告标签L1给B和C。当A想给FEC2分配本地标签时，它就不能用L1了，所以数据包的转发仅根据标签本身，与接口就没关系了。
+</p>
+
+![Figure 2-11. Per-Platform Label Space](https://learning.oreilly.com/api/v2/epubs/urn:orm:book:1587051974/files/1587051974_ch02lev1sec10_image02.gif)
+
+
 
 ### 不同的 MPLS 运行模式
 
+<p>
+  一个LSR可以使用不同的模式进行标签分发，这一小节中我们介绍如下3种模式。
+</p>
+
+* Label distribution mode
+* Label retention mode
+* LSP control mode
+
+<p>
+  每种模式都有不同的特性，下面我们逐一介绍。
+</p>
+
+
+
+#### Label Distribution Modes - 标签分发机制
+
+<p>
+  在MPLS架构中有两种模式可以分发标签:
+</p>
+
+* Downstream-on-Demand（DoD - 下游按需分配）
+* Unsolicited Downstream（UD - 下游自动分配）
+
+
+
+**DOD**
+
+<p>
+  在DoD模式下每个LSR都向LSP的下一跳请求标签，然后把标签绑定到自己的FEC。并且每个LSR对一个FEC只会绑定一个下游LSR发过来的标签（因为它只发出去了一个请求）。下游LSR就是它路由表中的下一跳路由器。
+</p>
+
+**UD**
+
+<p>
+  在UD模式下，每个LSR都自动为它的邻接LSR分发标签，不需要特殊的请求。所以UD模式下，每个LSR都可以从邻接LSR中收到多个remote label。
+</p>
+
+
+
+<p>
+  在DoD模式LSR上，LIB针对一个FEC只有一个remote标签，而UD模式下则会看到多个。具体选择哪一种模式要看场景，设备接口和Cisco IOS的支持情况。
+</p>
+
+#### Label Retention Modes - 标签保留机制
+
+<p>
+  标签保留机制有两种：
+</p>
+
+* Liberal Label Retention mode（LLR）
+* Conservative Label Retention mode（CLR）
+
+<p>
+  在LLR模式下，LIB中会保存所有从邻居收到的remote label，即使LSR只会根据路由表选择并使用一个最优的标签安装到LFIB中。那么为什么会保存其余的标签在LIB中的呢？答案是，快速收敛。网络层拓扑是随时变化的，比如链路或路由器失效。因此每个FEC的最优下一跳都是会变的，当变化发生是，LSR可以从LIB中直接找到新的下一跳标签，然后重新安装到LFIB，效率杠杠滴。
+</p>
+
+<p>
+  第二个模式就是CLR。对比LLR，它在LIB中只会保存最优下一跳的标签。
+</p>
+
+<p>
+  总结一下，LLR会带给你更快的使用体验，而CLR会为你节省更多的标签存储/内存空间。在IOS中一般使用LLR模式。
+</p>
+
+
+
+#### LSP Control Modes - LSP控制模式
+
+<p>
+  在LSR为FEC分配本地标签时，遵循如下两种模式：
+</p>
+
+* Independent LSP Control mode
+* Ordered LSP Control mode
+
+
+
+**独立于LSP控制模式**
+
+<p>
+  不依赖于下游LSR，本地独立为FEC生成local label，这样的模式就叫做Independent LSP Control模式。在这种模式下LSR会为自己识别出来的FEC立刻分配本地标签。通常情况下，路由表里面一旦出现新的前缀，LSR就会立刻分配本地标签。
+</p>
+
+**遵循LSP控制模式**
+
+<p>
+  这种情况下，当且仅当LSR认为它是一个FEC的出口LSR或它从它的下一跳LSR收到remote label时候，它才会为这个FEC分配本地标签。
+</p>
+
+<p>
+  第一种模式的缺点为，有时候端到端LSP都还没有完全建立好，头端LSR就已经开始往这个LSP上转发报文了。这时候报文就可能会在中途被丢弃。LDP可以运行这两种模式中的任意一种。
+</p>
+
+<p>
+  Cisco IOS默认使用独立模式。
+</p>
