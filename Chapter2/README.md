@@ -7,7 +7,7 @@
   * [MPLS 和 OSI 参考模型](#MPLS-和-OSI-参考模型)
   * [标签交换路由器](#标签交换路由器)
   * [标签交换路径](#标签交换路径)
-  * [转发等价类 - FEC(Forwarding Equivalence Class)](#转发等价类---FEC(Forwarding-Equivalence-Class))
+  * [转发等价类 - FEC](#转发等价类---FEC)
   * [标签分发](#标签分发)
   * [标签分发协议 LDP](#标签分发协议-LDP)
   * [标签转发表 LFIB](#标签转发表-LFIB)
@@ -156,7 +156,7 @@
 
 
 
-### 转发等价类 - FEC(Forwarding Equivalence Class)
+### 转发等价类 - FEC
 
 <p>
   FET是具有相同转发路径或被执行相同转发处理的一组数据流。所有相同FEC的数据具有相同的标签，但具有相同标签的数据包不一定属于同一个FEC,因为它们的EXP不一定相同，转发时会应用不同的策略，即它们属于不同的FEC。Ingress LSR决定了数据包属于哪个FEC，因为数据包的标签是它打上去的，它更有权力做数据分类。下面是一些FEC的实例：
