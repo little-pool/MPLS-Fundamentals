@@ -33,7 +33,7 @@
 ![Figure 2-1. Syntax of One MPLS Label](https://learning.oreilly.com/library/view/mpls-fundamentals/1587051974/1587051974_ch02lev1sec1_image01.gif)
 
 <p>
-  前20个bits是标签的value，范围是0到2^20-1。前16个数值被保留于特殊用途。第20到22个bits为EXP（Experimental）用于QoS的Marking。
+  前20个bits是标签的value，范围是0到2^20-1,其中前16个标签号被保留于特殊用途。第20到22个bits为EXP（Experimental）用于QoS的Marking。
 </p>
 
 **Note**
