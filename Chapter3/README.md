@@ -78,7 +78,8 @@
   下图展示了IP-to-label的情况，CEF表中展示了IP报文的处理方式。
 </p>
 
-`lactometer#show ip cef 10.200.254.4
+```
+lactometer#show ip cef 10.200.254.4
 10.200.254.4/32, version 44, epoch 0, cached adjacency 10.200.200.2
 0 packets, 0 bytes
   tag information set, all rewrites owned
@@ -87,7 +88,8 @@
   via 10.200.200.2, Ethernet0/0/0, 0 dependencies
     next hop 10.200.200.2, Ethernet0/0/0
     valid cached adjacency
-    tag rewrite with Et0/0/0, 10.200.200.2, tags imposed {18}`
+    tag rewrite with Et0/0/0, 10.200.200.2, tags imposed {18}
+```
 
 
 
